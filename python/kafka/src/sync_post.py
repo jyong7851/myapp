@@ -1,6 +1,6 @@
 from gevent import monkey
 from gevent.pywsgi import WSGIServer
-from flask import Flask, jsonify, request,make_response
+from flask import Flask, jsonify, request,make_response, render_template
 from concurrent.futures import ThreadPoolExecutor
 
 import time
@@ -28,7 +28,7 @@ def do_update1():
     time.sleep(3)
     s="44444444444444"
     print('start update1')
-@app.after_request
+# @app.after_request
 def foot_log(response):
     if request.path != "/test":
         print("有客人访问了",request.path)
@@ -43,12 +43,21 @@ def test():
     global s
     s ="22222222"
     response = make_response(s)
-    task1 = executor.submit(do_update,(5))
+
     print("---------------")
    # do_update(3)
-    return task1.result(),201
+    return response,201
+
+
+@app.route('/test1/', methods=['GET'])
+def test1():
+    print("===============")
+    return render_template('index.html'),201
+
+
+
+
+
 if __name__ == "__main__":
-    app.run()
-    http_server = WSGIServer(('', 5000), app)
-    http_server.serve_forever()
+    app.run('0.0.0.0', debug=True, port=5000, ssl_context='adhoc')
 

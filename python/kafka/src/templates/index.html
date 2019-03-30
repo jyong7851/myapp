@@ -11,7 +11,9 @@
 <script type="text/javascript">
 
         namespace = '/test_conn';
-        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+        socket_url =  'wss://' + document.domain + ':' + location.port + namespace
+        console.log(socket_url)
+        var socket = io.connect(socket_url);
 
         console.log(socket)
 
@@ -20,7 +22,6 @@
         socket.on('response', function(res) {
                     var t = res.data;
                     $("#t").text($("#t").text()+" ("+ t +")")
-                    console.log(res)
                 })
 </script>
 </body>
