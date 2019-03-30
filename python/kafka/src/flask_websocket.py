@@ -4,26 +4,24 @@ import random
 
 async_mode = None
 app = Flask(__name__)
-socketio = SocketIO()
-socketio.init_app(app)
+socket_io = SocketIO()  # 通信类
+socket_io.init_app(app)
 
 
 @app.route('/')
 def index():
-    return render_template('index.html', async_mode=socketio.async_mode)
+    return render_template('index.html', async_mode=socket_io.async_mode)
 
 
-@socketio.on('request_for_response', namespace='/test_conn')
+@ socketio.on('request_for_response', namespace='/test_conn')
 def test_connect(msg):
     print(msg.get("param"))
     while True:
-        socketio.sleep(5)
+        socket_io.sleep(5)
         t = random_int_list(1, 100, 10)
-        socketio.emit('response',
+        socket_io.emit('response',
                       {'data': t},
                       namespace='/test_conn')
-
-
 
 
 def random_int_list(start, stop, length):
