@@ -8,12 +8,12 @@ socket_io = SocketIO()  # 通信类
 socket_io.init_app(app)
 
 
-@app.route('/')
+#@app.route('/')
 def index():
     return render_template('index.html', async_mode=socket_io.async_mode)
 
 
-@ socketio.on('request_for_response', namespace='/test_conn')
+@ socket_io.on('request_for_response', namespace='/test_conn')
 def test_connect(msg):
     print(msg.get("param"))
     while True:
@@ -34,4 +34,4 @@ def random_int_list(start, stop, length):
 
 
 if __name__ == '__main__':
-    socketio.run(app,port=5001, host='0.0.0.0',debug=True)
+    socket_io.run(app,port=5001, host='0.0.0.0',debug=True)
