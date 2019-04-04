@@ -11,18 +11,20 @@
 <script type="text/javascript">
 
         namespace = '/test_conn';
-        socket_url =  'wss://' + document.domain + ':' + location.port + namespace
+       // var socket_url =  'http://' + document.domain + ':' + location.port + namespace
+        var socket_url =  'http://' + document.domain + ':5000' + namespace
         console.log(socket_url)
         var socket = io.connect(socket_url);
-
         console.log(socket)
+          /*
+        socket.emit('request_for_response', {data: "test"});
 
-        socket.emit('request_for_response',{'param':'value'});
+       socket.on('response', function(msg){
+              var t = msg.data;
+              $("#t").text($("#t").text()+" ("+ t +")")
+        })
+        */
         console.log(socket)
-        socket.on('response', function(res) {
-                    var t = res.data;
-                    $("#t").text($("#t").text()+" ("+ t +")")
-                })
 </script>
 </body>
 </html>
