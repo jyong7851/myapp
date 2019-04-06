@@ -1,7 +1,7 @@
 from kafka import KafkaProducer
 import json
 from datetime import  datetime
-producer = KafkaProducer(bootstrap_servers='106.12.222.49:9092')
+producer = KafkaProducer(bootstrap_servers='192.168.1.12:9092')
 msg_dict = {
     "sleep_time": 10,
     "db_config": {
