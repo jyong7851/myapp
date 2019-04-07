@@ -11,17 +11,13 @@ print(zk.exists("/sg/city/beijing"))
 print(zk.get("/sg/city/beijing"))
 '''
 def post_range(rg):
-    '''
-      for i in rg:
-        i += i
-    :param rg:
-    :return:
-    '''
+
     for i in rg:
-        c = zerorpc.Client()
-        c.connect("tcp://127.0.0.1:4242")
-        c.hello(i)
-        c.close()
+        i += i
+    c = zerorpc.Client()
+    c.connect("tcp://127.0.0.1:4242")
+    c.hello("test2",i)
+    c.close()
     dt = datetime.now()
     print(dt.strftime("%H:%M:%S %f"))
 def pool_post():
@@ -48,6 +44,7 @@ def post():
 
 dt = datetime.now()
 print(dt.strftime("%H:%M:%S %f"))
-pool_post()
-# post()
+
+
+post()
 
