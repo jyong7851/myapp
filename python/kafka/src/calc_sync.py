@@ -5,8 +5,9 @@ from flask import Flask, jsonify, request, make_response, render_template
 import gevent.pywsgi
 import gevent
 from gevent import monkey
+from python.kafka.src.producer import send_kafka
 
-monkey.patch_all()
+# monkey.patch_all()
 app = Flask(__name__)
 
 _USER_QUEUE_DICT = {}
@@ -72,19 +73,19 @@ def start_server():
     s.run()
 
 
-@app.route('/test', methods=['GET', 'POST'])
+@app.route('/test/', methods=['GET', 'POST'])
 def test():
-    id = request.form['id']
-    print(id)
-    calc = TgSyncCalc(id)
+    send_kafka()
 
-    calc.write_to_kafka()
-    executor.submit(start_server)
-    ret = str(calc.get_response())
-    response = make_response(ret)
+    response = make_response("ok")
     return response, 201
 
-
+'''
 if __name__ == "__main__":
     gevent_server = gevent.pywsgi.WSGIServer(('0.0.0.0', 5000), app)
     gevent_server.serve_forever()
+
+
+'''
+if __name__ == "__main__":
+    app.run('0.0.0.0', debug=True, port=5000)

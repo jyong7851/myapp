@@ -52,12 +52,12 @@ def test():
 @app.route('/test1/', methods=['GET'])
 def test1():
     print("===============")
+    producer = KafkaProducer(bootstrap_servers='192.168.1.12:9092')
     return render_template('index.html'),201
 
 
 
 
 
-if __name__ == "__main__":
-    app.run('0.0.0.0', debug=True, port=5000)
+
 

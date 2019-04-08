@@ -41,9 +41,10 @@ def calc_server(task_list):
 
 def kafka_consumer():
     consumer = KafkaConsumer('test', group_id="user-event-test", bootstrap_servers=['192.168.1.12:9092'])
-    executor.submit(start_timer)
+   # executor.submit(start_timer)
     for msg in consumer:
         recv = "%s:%d:%d: key=%s value=%s" % (msg.topic, msg.partition, msg.offset, msg.key, msg.value)
+        print(recv)
         kafka_list.append(recv)
 
 
