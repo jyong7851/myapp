@@ -2,7 +2,8 @@ from gevent import monkey
 from gevent.pywsgi import WSGIServer
 from flask import Flask, jsonify, request,make_response, render_template
 from concurrent.futures import ThreadPoolExecutor
-
+from python.kafka.src.calc_dispy import calc
+import gevent
 import time
 monkey.patch_all()
 executor = ThreadPoolExecutor(max_workers=2)
@@ -52,11 +53,12 @@ def test():
 @app.route('/test1/', methods=['GET'])
 def test1():
     print("===============")
-    producer = KafkaProducer(bootstrap_servers='192.168.1.12:9092')
-    return render_template('index.html'),201
+    s = calc()
+    return make_response(s),201
 
 
-
+if __name__ == '__main__':
+    app.run('0.0.0.0', debug=True, port=5000)
 
 
 
