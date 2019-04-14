@@ -32,7 +32,7 @@ def calc_tg(tgs):
 
 def load_data():
     tg_list = []
-    for i in range(10000000):
+    for i in range(100000):
         tg_list.append(random.randint(1, 10000))
     return tg_list
 
@@ -41,7 +41,7 @@ def calc():
     import dispy
     nodes = ['127.0.0.1']
     #  启动计算集群，和服务器通信，通信密钥是'secret' # depends 为依赖函数
-    cluster = dispy.JobCluster(calc_tg, nodes=nodes, secret='secret', depends=[get_tg_line_loss])
+    cluster = dispy.JobCluster(calc_tg, nodes=nodes, secret='secret', depends=[get_tg_line_loss],loglevel=50)
     jobs = []
     datas = load_data()
     job = cluster.submit((datas))

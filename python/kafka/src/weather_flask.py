@@ -1,8 +1,14 @@
-#coding:utf-8
-from kafka import KafkaProducer
-from kafka.errors import KafkaError
-import json
+from flask import Flask, jsonify, request, make_response, render_template
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from python.kafka.src.calc_dispy import calc
+import asyncio, json
+from aiohttp import ClientSession
+
+executor = ThreadPoolExecutor(max_workers=2)
+app = Flask(__name__)
+app.config.update(DEBUG=True)
+weather_list = []
 
 
 def get_citys():
@@ -52,25 +58,38 @@ def get_citys():
     return citys
 
 
-def send_kafka():
-    producer = KafkaProducer(bootstrap_servers='192.168.1.12:9092')
+async def get_web_weather(city):
+    async with ClientSession() as session:
+        async with session.get("http://wthrcdn.etouch.cn/weather_mini?city=" + city) as response:
+            response = await response.read()
+            print(response.decode("utf-8"))
+            weatherData = json.loads(response.decode("utf-8"))
+
+            weather_dict = dict()
+            if weatherData["status"] == 1000:
+                weather_dict['city'] = city
+                weather_dict['high'] = weatherData['data']['forecast'][0]['high']
+                weather_dict['low'] = weatherData['data']['forecast'][0]['low']
+                weather_dict['type'] = weatherData['data']['forecast'][0]['type']
+                weather_dict['fengxiang'] = weatherData['data']['forecast'][0]['fengxiang']
+                weather_dict['ganmao'] = weatherData['data']['ganmao']
+            weather_list.append(weather_dict)
+
+def get_city_weather(city):
+    dt = datetime.now()
+    print(dt.strftime("%H:%M:%S %f"))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(get_web_weather(city=city))
+
+@app.route('/test1/', methods=['GET'])
+def test1():
+    print("===============")
     citys = get_citys()
-    dt = datetime.now()
-    print(dt.strftime("%H:%M:%S %f"))
-    try:
-        i = 1
-        for city in citys:
-            key = "city_seq_%(i)05d" % {"i": i}
-            v = city.encode("utf-8")
-            k = key.encode('utf-8')
-            producer.send('test', key=k, value=v)
-            i += 1
-        producer.close()
-
-    except KafkaError as e:
-        print(e)
-    dt = datetime.now()
-    print(dt.strftime("%H:%M:%S %f"))
+    for city in citys:
+        get_city_weather(city)
+    hot_city,cold_city = calc(weather_list)
+    return make_response(hot_city), 201
 
 
-send_kafka()
+if __name__ == '__main__':
+    app.run('0.0.0.0', debug=True, port=5000)

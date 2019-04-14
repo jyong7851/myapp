@@ -1,70 +1,18 @@
 import uuid, time, json, zerorpc
-from queue import Queue, Empty
-from concurrent.futures import ThreadPoolExecutor
+
 from flask import Flask, jsonify, request, make_response, render_template
-import gevent.pywsgi
-import gevent
-from gevent import monkey
-from python.kafka.src.producer import send_kafka
-
-# monkey.patch_all()
-app = Flask(__name__)
-
-_USER_QUEUE_DICT = {}
+from python.kafka.src.query_weather import calc, calc_weather
 
 
 class HelloRPC(object):
-    i = 0
+    aysn_list = []
 
-    def hello(self, uuid, name):
-        self.i = int(name)
-        if (uuid in _USER_QUEUE_DICT.keys()):
-            _USER_QUEUE_DICT[uuid].put(name)
-        return "Hello, %s" % name
-
-
-class SyncCalc(object):
-    socket = {
-        "server_name": "",
-        "port": "4343"
-    }
-
-    def __init__(self, id):
-        # self._uid = str(uuid.uuid4())
-        self._uid = id
-
-        print("======" + self._uid + "=========")
-        _USER_QUEUE_DICT[self._uid] = Queue()
-        self.write_to_kafka()
-
-    def write_to_kafka(self, params):
-        print("======write to kafka=========")
-        print("uuid='" + self._uid + "'")
-        print("socket:%s" % str(self.socket))
-        print("params:%s" % str(params))
-
-    def get_response(self):
-        ret = {}
-        queue = _USER_QUEUE_DICT[self._uid]
-        try:
-            ret['data'] = queue.get(timeout=60)  # 十秒后断开，再连
-            ret['status'] = True
-            _USER_QUEUE_DICT.pop(self._uid)
-        except Empty as e:
-            ret['status'] = False
-        print(_USER_QUEUE_DICT)
-        return ret
-
-
-class TgSyncCalc(SyncCalc):
-
-    def write_to_kafka(self):
-        print("==========write OK=================")
-        tg_list = ["1101", "1102", "1103"]
-        # super().write_to_kafka(tg_list)
-
-
-executor = ThreadPoolExecutor(max_workers=5)
+    def hello(self, list):
+        for l in list:
+            if l not in self.aysn_list:
+                self.aysn_list.append(l)
+        print(len(self.aysn_list))
+        calc(weathers=self.aysn_list)
 
 
 def start_server():
@@ -73,19 +21,4 @@ def start_server():
     s.run()
 
 
-@app.route('/test/', methods=['GET', 'POST'])
-def test():
-    send_kafka()
-
-    response = make_response("ok")
-    return response, 201
-
-'''
-if __name__ == "__main__":
-    gevent_server = gevent.pywsgi.WSGIServer(('0.0.0.0', 5000), app)
-    gevent_server.serve_forever()
-
-
-'''
-if __name__ == "__main__":
-    app.run('0.0.0.0', debug=True, port=5000)
+start_server()
