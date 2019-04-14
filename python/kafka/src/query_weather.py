@@ -32,8 +32,7 @@ def calc(weathers):
     dt = datetime.now()
     print(dt.strftime("%H:%M:%S %f"))
     cluster.wait()
-    dt = datetime.now()
-    print(dt.strftime("%H:%M:%S %f"))
+    print(len(weathers))
     for job in jobs:
         hot_city, cold_city = job()
         print(hot_city)

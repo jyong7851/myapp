@@ -1,11 +1,10 @@
 from flask import Flask, jsonify, request, make_response, render_template
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from python.kafka.src.calc_dispy import calc
-import asyncio, json
-from aiohttp import ClientSession
+from python.kafka.src.query_weather import calc
+import requests,json,time
 
-executor = ThreadPoolExecutor(max_workers=2)
+executor = ThreadPoolExecutor(max_workers=200)
 app = Flask(__name__)
 app.config.update(DEBUG=True)
 weather_list = []
@@ -58,37 +57,53 @@ def get_citys():
     return citys
 
 
-async def get_web_weather(city):
-    async with ClientSession() as session:
-        async with session.get("http://wthrcdn.etouch.cn/weather_mini?city=" + city) as response:
-            response = await response.read()
-            print(response.decode("utf-8"))
-            weatherData = json.loads(response.decode("utf-8"))
 
-            weather_dict = dict()
-            if weatherData["status"] == 1000:
-                weather_dict['city'] = city
-                weather_dict['high'] = weatherData['data']['forecast'][0]['high']
-                weather_dict['low'] = weatherData['data']['forecast'][0]['low']
-                weather_dict['type'] = weatherData['data']['forecast'][0]['type']
-                weather_dict['fengxiang'] = weatherData['data']['forecast'][0]['fengxiang']
-                weather_dict['ganmao'] = weatherData['data']['ganmao']
-            weather_list.append(weather_dict)
 
-def get_city_weather(city):
+def get_city_weather(citys):
     dt = datetime.now()
-    print(dt.strftime("%H:%M:%S %f"))
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_web_weather(city=city))
+    for city in citys:
+        httpsession = requests.session()
+        r = httpsession.get("http://wthrcdn.etouch.cn/weather_mini?city=" + city)
+        r.raise_for_status()  # 如果状态不是200，引发HTTPError异常#
+        r.encoding = r.apparent_encoding
+        weather_data = json.loads(r.text)
+
+        weather_dict = dict()
+        if weather_data["status"] == 1000:
+            weather_dict['city'] = city
+            weather_dict['high'] = weather_data['data']['forecast'][0]['high']
+            weather_dict['low'] = weather_data['data']['forecast'][0]['low']
+            weather_dict['type'] = weather_data['data']['forecast'][0]['type']
+            weather_dict['fengxiang'] = weather_data['data']['forecast'][0]['fengxiang']
+            weather_dict['ganmao'] = weather_data['data']['ganmao']
+        weather_list.append(weather_dict)
 
 @app.route('/test1/', methods=['GET'])
 def test1():
     print("===============")
+    dt = datetime.now()
+    print(dt.strftime("%H:%M:%S %f"))
     citys = get_citys()
-    for city in citys:
-        get_city_weather(city)
+   # citys.extend(citys)
+  #  citys.extend(citys)
+
+
+   # job = cluster.submit((citys))
+   # jobs.append(job)
+    n = 200
+    m =len(citys) // n
+    j = 0
+    for i in range(0,m):
+        executor.submit(get_city_weather, citys[j:j+n])
+        j += n
+    executor.submit(get_city_weather,citys[m*n:])
+
+    print(len(weather_list))
+    while len(weather_list) != len(citys):
+        time.sleep(1)
     hot_city,cold_city = calc(weather_list)
-    return make_response(hot_city), 201
+    weather_list.clear()
+    return make_response(str(hot_city)), 201
 
 
 if __name__ == '__main__':
